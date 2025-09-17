@@ -5,9 +5,9 @@ This document is available in English and Traditional Chinese.
 
 ---
 
-`MistralChatCLI` is a simple, interactive command-line interface (CLI) chatbot powered by the [Mistral AI API](https://docs.mistral.ai/). It supports continuous conversation with streaming responses for a smooth, real-time interactive experience.
+`MistralChatCLI` is a simple, interactive command-line interface (CLI) chatbot powered by the [Mistral AI API]. It supports continuous conversation with streaming responses for a smooth, real-time interactive experience.
 
-**MistralChatCLI** 是一個簡單、互動式的命令列介面 (CLI) 聊天機器人，由 [Mistral AI API](https://docs.mistral.ai/) 驅動。它支援持續對話，並能以串流方式即時顯示 AI 的回應，提供流暢的互動體驗。
+**MistralChatCLI** 是一個簡單、互動式的命令列介面 (CLI) 聊天機器人，由 [Mistral AI API] 驅動。它支援持續對話，並能以串流方式即時顯示 AI 的回應，提供流暢的互動體驗。
 
 ## ✨ Features / 功能
 
@@ -50,11 +50,13 @@ Alternatively, you can download the `mistral_chat_cli.py` file directly.
 
 #### 2. Install Required Packages / 安裝必要的套件
 
-This project depends on the `mistralai` Python client. Install it using pip:
-(本專案依賴 `mistralai` Python 客戶端。使用 pip 進行安裝：)
+This project depends on a specific version of the `mistralai` Python client to ensure compatibility. Install version `0.4.2` using pip:
+(本專案依賴特定版本的 `mistralai` Python 客戶端以確保相容性。請使用 pip 安裝 `0.4.2` 版本：)
 ```bash
-pip install mistralai
+pip install mistralai==0.4.2
 ```
+*Using this specific version ensures that the script runs as expected with the library version it was tested with.*
+*(使用此特定版本可確保腳本在經過測試的函式庫版本下能穩定運行。)*
 
 #### 3. Configure Your Mistral API Key / 設定您的 Mistral API 金鑰
 
@@ -125,6 +127,8 @@ The complete code is contained in the `mistral_chat_cli.py` file, with detailed 
 ```python
 # -*- coding: utf-8 -*-
 
+# 匯入必要的函式庫
+# Import necessary libraries
 import os
 import sys
 from mistralai.client import MistralClient
@@ -136,12 +140,13 @@ def main():
     The main function to start a continuous conversation with Mistral AI.
     """
     # --- 1. 初始化設定 (Initialization) ---
+
     # 請將 "XXXX" 替換為您的 Mistral API 金鑰
     # Please replace "XXXX" with your Mistral API key
     API_KEY = "XXXX"
 
-    # 優先從環境變數讀取 API 金鑰
-    # Prioritize reading the API key from environment variables
+    # 優先從環境變數讀取 API 金鑰，如果不存在，則使用程式碼中定義的 API_KEY
+    # Prioritize reading the API key from environment variables. If it doesn't exist, use the API_KEY defined in the code.
     api_key = os.getenv("MISTRAL_API_KEY", API_KEY)
     if not api_key or api_key == "XXXX":
         print("錯誤：請設定您的 MISTRAL_API_KEY 環境變數或在程式碼中填寫 API_KEY。")
@@ -161,8 +166,9 @@ def main():
         return
 
     # --- 2. 對話歷史紀錄 (Conversation History) ---
-    # 儲存整個對話的上下文
-    # Stores the context of the entire conversation
+
+    # 建立一個列表來儲存整個對話的上下文
+    # Create a list to store the context of the entire conversation
     messages = []
 
     print("與 Mistral AI 開始對話。輸入 'exit', 'quit', 或 '退出' 來結束對話。")
@@ -182,61 +188,64 @@ def main():
                 print("對話結束。(Conversation ended.)")
                 break
 
-            # 將使用者的輸入加入到對話歷史中
-            # Add the user's input to the conversation history
+            # 將使用者的輸入作為一個 'user' 角色訊息加入到對話歷史中
+            # Add the user's input as a 'user' role message to the conversation history
             messages.append(ChatMessage(role="user", content=user_input))
 
             print("\nAI: ", end="")
 
             # --- 4. 呼叫 API 並處理串流回應 (Call API and Handle Stream Response) ---
-            # 使用 client.chat_stream 方法來啟用串流
-            # Use the client.chat_stream method to enable streaming
+
+            # 使用 client.chat_stream 方法來啟用串流，這會立即返回一個生成器對象
+            # Use the client.chat_stream method to enable streaming, which returns a generator object immediately
             stream_response = client.chat_stream(
                 model=model,
                 messages=messages,
             )
 
-            # 用來收集完整的 AI 回應
-            # Used to collect the full AI response
+            # 建立一個空字串，用來收集完整的 AI 回應
+            # Create an empty string to collect the full AI response
             ai_full_response = ""
 
             # 遍歷回應的每一個區塊 (chunk)
             # Iterate over each chunk of the response
             for chunk in stream_response:
+                # 獲取區塊中的內容
+                # Get the content from the chunk
                 chunk_content = chunk.choices.delta.content
                 if chunk_content is not None:
-                    # 將內容即時印出
-                    # Print the content in real-time
+                    # 將內容即時印出到控制台
+                    # Print the content to the console in real-time
                     print(chunk_content, end="")
+                    # 強制刷新輸出緩衝區，確保內容立即顯示
+                    # Force flush the output buffer to ensure immediate display
                     sys.stdout.flush()
-                    # 收集回應內容
-                    # Collect the response content
+                    # 將區塊內容附加到完整回應字串中
+                    # Append the chunk content to the full response string
                     ai_full_response += chunk_content
 
-            # 將完整的 AI 回應加入到對話歷史中
-            # Add the complete AI response to the conversation history
+            # 當串流結束後，將完整的 AI 回應作為 'assistant' 角色訊息加入到對話歷史中
+            # After the stream ends, add the complete AI response as an 'assistant' role message to the history
             if ai_full_response:
                 messages.append(ChatMessage(role="assistant", content=ai_full_response))
 
-            # 在 AI 回應結束後換行
-            # Add a newline after the AI's response is complete
+            # 在 AI 回應結束後換行並印出分隔線
+            # Add a newline and print a separator after the AI's response is complete
             print("\n" + "-" * 30)
 
         except KeyboardInterrupt:
-            # 允許使用 Ctrl+C 來中斷程式
-            # Allow interruption with Ctrl+C
+            # 允許使用者使用 Ctrl+C 來中斷程式
+            # Allow the user to interrupt the program with Ctrl+C
             print("\n對話被中斷。(Conversation interrupted.)")
             break
         except Exception as e:
+            # 捕捉並印出其他可能的錯誤
+            # Catch and print any other potential errors
             print(f"\n發生錯誤 (An error occurred): {e}")
             break
 
+# 程式執行的進入點
+# Entry point of the script
 if __name__ == "__main__":
     main()
-
 ```
-
-## 📄 License / 授權
-
-This project is licensed under the [MIT License](LICENSE).
-(本專案採用 [MIT 授權條款](LICENSE)。)
