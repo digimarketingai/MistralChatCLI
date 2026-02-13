@@ -41,7 +41,7 @@ This document is available in English and Traditional Chinese.
 
 Clone the repository using git:
 ```bash
-git clone https://github.com/your-username/MistralChatCLI.git
+git clone https://github.com/digimarketingai/MistralChatCLI.git
 cd MistralChatCLI
 ```
 Alternatively, you can download the `mistral_chat_cli.py` file directly.
